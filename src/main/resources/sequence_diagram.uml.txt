@@ -1,0 +1,50 @@
+@startuml
+actor Kafka
+participant TradeConsumer
+participant TradeService
+participant TradeRepository
+actor Scheduler
+
+Kafka -> TradeConsumer : Trade Received
+activate TradeConsumer
+TradeConsumer -> TradeService : processTrade(trade)
+activate TradeService
+alt Trade Exists with Higher Version
+    TradeService --> TradeConsumer : Trade Rejected (Exception)
+    deactivate TradeService
+else Trade Exists with Same Version
+    TradeRepository -> TradeService : findByTradeId(tradeId)
+    activate TradeRepository
+    TradeRepository --> TradeService : Existing Trade
+    deactivate TradeRepository
+    TradeService -> TradeRepository : save(trade) (Replaces existing)
+    activate TradeRepository
+    TradeRepository --> TradeService : Trade Saved
+    deactivate TradeRepository
+else New Trade
+    TradeService -> TradeRepository : save(trade)
+    activate TradeRepository
+    TradeRepository --> TradeService : Trade Saved
+    deactivate TradeRepository
+end
+TradeService --> TradeConsumer : Trade Processed
+deactivate TradeService
+TradeConsumer --> Kafka : Ack
+
+Scheduler -> TradeScheduler : Scheduled Task
+activate TradeScheduler
+TradeScheduler -> TradeService : expireOldTrades()
+activate TradeService
+TradeService -> TradeRepository : findAllNotExpired()
+activate TradeRepository
+TradeRepository --> TradeService : List of Not Expired Trades
+deactivate TradeRepository
+TradeService -> TradeRepository : updateExpiredTrades(tradeIds)
+activate TradeRepository
+TradeRepository --> TradeService : Trades Updated
+deactivate TradeRepository
+TradeService --> TradeScheduler : Done
+deactivate TradeService
+deactivate TradeScheduler
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+class Trade {
+    - tradeId : String
+    - versionId : Integer
+    - counterPartyId : String
+    - bookId : String
+    - maturityDate : Date
+    - createdDate : Date
+    - expired : String
+}
+
+interface TradeRepository {
+    + findByTradeId(tradeId : String) : List<Trade>
+    + save(trade : Trade) : Trade
+    + findAllNotExpired() : List<Trade>
+    + updateExpiredTrades(tradeIds : List<String>) : void
+}
+
+class TradeService {
+    - tradeRepository : TradeRepository
+    + processTrade(trade : Trade) : void
+    + expireOldTrades() : void
+}
+
+class TradeConsumer {
+    - tradeService : TradeService
+    + consumeTrade(trade : Trade) : void
+}
+
+class TradeScheduler {
+    - tradeService : TradeService
+    + scheduleExpireTrades() : void
+}
+
+class TradeController {
+  - tradeService : TradeService
+  + getTradeById(tradeId: String): Trade
+}
+
+TradeConsumer -- TradeService
+TradeService -- TradeRepository
+TradeScheduler -- TradeService
+TradeController -- TradeService
+
+@enduml
