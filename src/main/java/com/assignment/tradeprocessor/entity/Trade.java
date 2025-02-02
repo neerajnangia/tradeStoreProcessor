@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Entity
 public class Trade {
 
-
     @jakarta.persistence.Id
     private String tradeId;
     private int versionId;

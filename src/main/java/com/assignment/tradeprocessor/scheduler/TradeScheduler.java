@@ -10,7 +10,7 @@ public class TradeScheduler {
     @Autowired
     private TradeService tradeService;
 
-    @Scheduled(cron = "0 0 * * * *") // Runs every hour
+    @Scheduled(cron = "0 0 0 * *") // Runs every day
     public void scheduleExpireTrades() {
         tradeService.expireTrades();
     }
